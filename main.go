@@ -10,6 +10,9 @@ import (
 
 func main() {
 	router := mux.NewRouter()
-	router.HandleFunc("/product", handler.ProductHandler).Methods("GET")
+	v1 := router.PathPrefix("/v1").Subrouter()
+
+	getProductRouter := v1.Methods(http.MethodGet).Subrouter()
+	getProductRouter.HandleFunc("/product", handler.GetProduct).Methods("GET")
 	log.Fatal(http.ListenAndServe(":9090", router))
 }
