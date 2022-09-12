@@ -1,10 +1,43 @@
-<h1 align="center">
+# REST API Server Template
+
+<!-- You can clone this repo as a template to generate a RESTful API web server in Go using the Gorilla Toolkit [https://www.gorillatoolkit.org/](https://www.gorillatoolkit.org/) -->
+
+## Documentation
+
+Coming soon...
+<!-- OpenAPI documentation can be found in the [swagger.yaml](./swagger.yaml) file -->
+
+<!-- ## Creating Swagger File
+
+To build the swagger.yaml file for serving documentation, run `make swagger`
+
+For windows user to have the `make` command working:
+
+1. Install Make for Windows from http://gnuwin32.sourceforge.net/downlinks/make.php that will download make-3.81.exe
+2. Execute make-3.81.exe by double clicking on the file
+3. Add C:\Program Files (x86)\GnuWin32\bin to your system environment variables Path. For further information, see: https://docs.microsoft.com/en-us/previous-versions/office/developer/sharepoint-2010/ee537574(v=office.14)#:~:text=To%20add%20a%20path%20to%20the%20PATH%20environment%20variable&text=In%20the%20System%20dialog%20box,to%20Path%20and%20select%20it.
+4. Close any apps or shells you want to use the "make" command within and reopen them. This will get the new path location loaded in the apps
+5. Run `make -v` to verify that `make` command is installed successfully
+6. Installed go-swagger by typing: `go get -u github.com/go-swagger/go-swagger/cmd/swagger` -->
+
+## Running
+
+The application can be run with `go run .` or `go run main.go`
+
+```
+➜ go run main.go
+golang-api-server: 2022/09/12 17:44:34 [DEV] Server is starting on port 9090
+
+curl localhost:9090/product
+```
+
+<!-- <h1 align="center">
   <img alt="cgapp logo" src="https://raw.githubusercontent.com/create-go-app/cli/master/.github/images/cgapp_logo%402x.png" width="224px"/><br/>
-  Create Go App CLI
+  Rest-API-Server
 </h1>
 <p align="center">Create a new production-ready project with <b>backend</b> (Golang), <b>frontend</b> (JavaScript, TypeScript)<br/>and <b>deploy automation</b> (Ansible, Docker) by running one CLI command.<br/><br/>Focus on <b>writing</b> code and <b>thinking</b> of business-logic! The CLI will take care of the rest.</p>
 
-<p align="center"><a href="https://pkg.go.dev/github.com/create-go-app/cli/v3?tab=doc" 
+<p align="center"><a href="https://pkg.go.dev/github.com/create-go-app/cli/v3?tab=doc"
 target="_blank"><img src="https://img.shields.io/badge/Go-1.17+-00ADD8?style=for-the-badge&logo=go" alt="go version" /></a>&nbsp;<a href="https://gocover.io/github.com/create-go-app/cli/pkg/cgapp" target="_blank"><img src="https://img.shields.io/badge/Go_Cover-88.3%25-success?style=for-the-badge&logo=none" alt="go cover" /></a>&nbsp;<a href="https://goreportcard.com/report/github.com/create-go-app/cli" target="_blank"><img src="https://img.shields.io/badge/Go_report-A+-success?style=for-the-badge&logo=none" alt="go report" /></a>&nbsp;<img src="https://img.shields.io/badge/license-apache_2.0-red?style=for-the-badge&logo=none" alt="license" /></p>
 
 ## ⚡️ Quick start
@@ -174,4 +207,4 @@ Together, we can make this project **better** every day! 😘
 
 ## ⚠️ License
 
-`Create Go App CLI` is free and open-source software licensed under the [Apache 2.0 License](https://github.com/create-go-app/cli/blob/master/LICENSE). Official [logo](https://github.com/create-go-app/cli/wiki/Logo) was created by [Vic Shóstak](https://shostak.dev/) and distributed under [Creative Commons](https://creativecommons.org/licenses/by-sa/4.0/) license (CC BY-SA 4.0 International).
+`Create Go App CLI` is free and open-source software licensed under the [Apache 2.0 License](https://github.com/create-go-app/cli/blob/master/LICENSE). Official [logo](https://github.com/create-go-app/cli/wiki/Logo) was created by [Vic Shóstak](https://shostak.dev/) and distributed under [Creative Commons](https://creativecommons.org/licenses/by-sa/4.0/) license (CC BY-SA 4.0 International). -->
