@@ -3,7 +3,7 @@ package config
 import "fmt"
 
 var (
-	ENV_TEST = "dev" // dev or prod
+	ENV = "dev" // dev or prod
 	// Default Database (MySQL) --> golang_rest_api
 	DB_TEST_HOSTNAME = "localhost"
 	DB_TEST_NAME     = "golang_rest_api"
