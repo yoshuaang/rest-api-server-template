@@ -15,9 +15,6 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// Is a key used for the Company departments object in the context
-type KeyProducts struct{}
-
 func ProductHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusNoContent)
 }
@@ -34,7 +31,7 @@ func GetProduct(writer http.ResponseWriter, request *http.Request) {
 	productResult := DB.Find(&product).
 		Where("active = ?", 2)
 	if productResult.Error != nil {
-		fmt.Println("[ERROR] Querying vendors", productResult.Error.Error())
+		fmt.Println("[ERROR] Querying products", productResult.Error.Error())
 	}
 
 	util.ToJSON(product, writer)
@@ -42,13 +39,13 @@ func GetProduct(writer http.ResponseWriter, request *http.Request) {
 
 func CreateProduct(writer http.ResponseWriter, request *http.Request) {
 	target := "CreateProduct"
-	log.Printf("[DEBUG] %v: receive product to be saved", target)
+	log.Printf("[DEBUG] %v: receive products to be saved", target)
 
 	products := model.Products{}
 	b, _ := ioutil.ReadAll(request.Body)
 	err := json.Unmarshal(b, &products)
 	if err != nil {
-		fmt.Printf("[ERROR] %v: deserializing company departments %v", target, err)
+		fmt.Printf("[ERROR] %v: deserializing products %v", target, err)
 
 		writer.WriteHeader(http.StatusBadRequest)
 		util.ToJSON(&util.ErrorResponse{
