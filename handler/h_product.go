@@ -148,3 +148,55 @@ func UpdateProduct(rw http.ResponseWriter, rq *http.Request) {
 		Message: "Successfully updated the data",
 	}, rw)
 }
+
+func DeleteProduct(rw http.ResponseWriter, rq *http.Request) {
+	target := "DeleteProduct"
+	log.Printf("[DEBUG] %v: receive products to be deleted", target)
+
+	products := model.Products{}
+	b, _ := ioutil.ReadAll(rq.Body)
+	err := json.Unmarshal(b, &products)
+	if err != nil {
+		fmt.Printf("[ERROR] %v: deserializing products %v", target, err)
+
+		rw.WriteHeader(http.StatusBadRequest)
+		util.ToJSON(&util.ErrorResponse{
+			Error: util.ErrorBody{
+				Code:    util.ErrValidation.Error(),
+				Message: err.Error(),
+				Target:  target,
+			},
+		}, rw)
+		return
+	}
+
+	DB, err_db := gorm.Open(mysql.Open(config.DSN_TEST), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
+	if err_db != nil {
+		fmt.Println("[ERROR] Failed to connect to default database", err_db.Error())
+	}
+
+	res := DB.Delete(&products)
+	if res.Error != nil {
+		fmt.Printf("[ERROR] %v: commit update product %v", target, res.Error.Error())
+		res.Rollback()
+
+		rw.WriteHeader(http.StatusInternalServerError)
+		util.ToJSON(&util.ErrorResponse{
+			Error: util.ErrorBody{
+				Code:    util.ErrInternalServer.Error(),
+				Message: res.Error.Error(),
+				Target:  target,
+			},
+		}, rw)
+		return
+	}
+
+	// Returns success message
+	rw.WriteHeader(http.StatusOK)
+
+	util.ToJSON(&util.SuccessResponse{
+		Message: "Successfully deleted the data",
+	}, rw)
+}
