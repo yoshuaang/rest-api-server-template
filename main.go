@@ -24,7 +24,9 @@ func Router() *mux.Router {
 	// POST Product
 	postProductRouter := v1.Methods(http.MethodPost).Subrouter()
 	postProductRouter.HandleFunc("/product", handler.CreateProduct).Methods("POST")
-
+	// PUT Product
+	putProductRouter := v1.Methods(http.MethodPut).Subrouter()
+	putProductRouter.HandleFunc("/product", handler.UpdateProduct).Methods("PUT")
 	return router
 }
 

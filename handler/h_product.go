@@ -15,10 +15,6 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func ProductHandler(writer http.ResponseWriter, request *http.Request) {
-	writer.WriteHeader(http.StatusNoContent)
-}
-
 func GetProduct(writer http.ResponseWriter, request *http.Request) {
 	DB, err_db := gorm.Open(mysql.Open(config.DSN_TEST), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
@@ -65,7 +61,7 @@ func CreateProduct(writer http.ResponseWriter, request *http.Request) {
 		fmt.Println("[ERROR] Failed to connect to default database", err_db.Error())
 	}
 
-	trx := DB.CreateInBatches(products, 250)
+	trx := DB.CreateInBatches(products, 50)
 	if trx.Error != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		util.ToJSON(&util.ErrorResponse{
@@ -82,4 +78,73 @@ func CreateProduct(writer http.ResponseWriter, request *http.Request) {
 	util.ToJSON(&util.SuccessResponse{
 		Message: "Successfully saved the data",
 	}, writer)
+}
+
+func UpdateProduct(rw http.ResponseWriter, rq *http.Request) {
+	target := "UpdateProduct"
+	log.Printf("[DEBUG] %v: receive products to be updated", target)
+
+	products := model.Products{}
+	b, _ := ioutil.ReadAll(rq.Body)
+	err := json.Unmarshal(b, &products)
+	if err != nil {
+		fmt.Printf("[ERROR] %v: deserializing products %v", target, err)
+
+		rw.WriteHeader(http.StatusBadRequest)
+		util.ToJSON(&util.ErrorResponse{
+			Error: util.ErrorBody{
+				Code:    util.ErrValidation.Error(),
+				Message: err.Error(),
+				Target:  target,
+			},
+		}, rw)
+		return
+	}
+
+	DB, err_db := gorm.Open(mysql.Open(config.DSN_TEST), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
+	if err_db != nil {
+		fmt.Println("[ERROR] Failed to connect to default database", err_db.Error())
+	}
+
+	txDB := DB.Begin()
+	res := txDB.Save(&products)
+	if res.Error != nil {
+		fmt.Printf("[ERROR] %v: update product %v", target, res.Error.Error())
+		txDB.Rollback()
+
+		rw.WriteHeader(http.StatusInternalServerError)
+		util.ToJSON(&util.ErrorResponse{
+			Error: util.ErrorBody{
+				Code:    util.ErrInternalServer.Error(),
+				Message: res.Error.Error(),
+				Target:  target,
+			},
+		}, rw)
+		return
+	}
+
+	res = txDB.Commit()
+	if res.Error != nil {
+		fmt.Printf("[ERROR] %v: commit update product %v", target, res.Error.Error())
+		txDB.Rollback()
+
+		rw.WriteHeader(http.StatusInternalServerError)
+		util.ToJSON(&util.ErrorResponse{
+			Error: util.ErrorBody{
+				Code:    util.ErrInternalServer.Error(),
+				Message: res.Error.Error(),
+				Target:  target,
+			},
+		}, rw)
+		return
+	}
+
+	// Returns success message
+	rw.WriteHeader(http.StatusOK)
+
+	util.ToJSON(&util.SuccessResponse{
+		Message: "Successfully updated the data",
+	}, rw)
 }
