@@ -3,48 +3,74 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"golang-api-server/config"
 	"golang-api-server/handler"
+	"golang-api-server/util"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"path"
+	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/acme/autocert"
 )
 
-func Router() *mux.Router {
-	router := mux.NewRouter()
-	v1 := router.PathPrefix("/v1").Subrouter()
-	// GET Product
-	getProductRouter := v1.Methods(http.MethodGet).Subrouter()
-	getProductRouter.HandleFunc("/product", handler.GetProduct).Methods("GET")
-	// POST Product
-	postProductRouter := v1.Methods(http.MethodPost).Subrouter()
-	postProductRouter.HandleFunc("/product", handler.CreateProduct).Methods("POST")
-	// PUT Product
-	putProductRouter := v1.Methods(http.MethodPut).Subrouter()
-	putProductRouter.HandleFunc("/product", handler.UpdateProduct).Methods("PUT")
-	// DELETE Product
-	deleteProductRouter := v1.Methods(http.MethodDelete).Subrouter()
-	deleteProductRouter.HandleFunc("/product", handler.DeleteProduct).Methods("DELETE")
+func Initialize() {
+	// from Executable Directory
+	ex, _ := os.Executable()
+	fmt.Println("[DEBUG] Executable Dir:", filepath.Dir(ex))
 
-	return router
+	// Current working directory
+	dir, _ := os.Getwd()
+	fmt.Println("[DEBUG] Current Working Dir:", dir)
+
+	// Relative on runtime DIR:
+	_, b, _, _ := runtime.Caller(0)
+	d1 := path.Join(path.Dir(b))
+	fmt.Println("[DEBUG] Relative Dir", d1)
 }
 
 func main() {
-	l := log.New(os.Stdout, "golang-api-server: ", log.LstdFlags)
+	Initialize()
 
-	// Router list
-	router := Router()
+	l := log.New(os.Stdout, "golang-api: ", log.LstdFlags)
+	v := util.NewValidation()
 
+	// create a new serve mux and register the handlers
+	sm := mux.NewRouter()
+	// Specify the API version, in this case API version 1
+	v1 := sm.PathPrefix("/v1").Subrouter()
+
+	// create the handlers
+	productHandler := handler.NewProductHandler(l, v)
+
+	// GET Product
+	getProductRouter := v1.Methods(http.MethodGet).Subrouter()
+	getProductRouter.HandleFunc("/product", productHandler.GetProduct)
+	// POST Product
+	postProductRouter := v1.Methods(http.MethodPost).Subrouter()
+	postProductRouter.HandleFunc("/product", productHandler.CreateProduct)
+	// PUT Product
+	putProductRouter := v1.Methods(http.MethodPut).Subrouter()
+	putProductRouter.HandleFunc("/product", productHandler.UpdateProduct)
+	// DELETE Product
+	deleteProductRouter := v1.Methods(http.MethodDelete).Subrouter()
+	deleteProductRouter.HandleFunc("/product", productHandler.DeleteProduct)
+
+	BeginServer(sm, l)
+}
+
+func BeginServer(sm *mux.Router, l *log.Logger) {
 	/* BEGIN::DEVELOPMENT MODE */
 	if config.ENV == "dev" {
 		devServer := &http.Server{
 			Addr:         ":9090",           // configure the bind address to 9090 (for development)
-			Handler:      router,            // set the default handler
+			Handler:      sm,                // set the default handler
 			ErrorLog:     l,                 // set the logger for the server
 			ReadTimeout:  5 * time.Second,   // max time to read request from the client
 			WriteTimeout: 10 * time.Second,  // max time to write response to the client
@@ -87,7 +113,7 @@ func main() {
 		// create a new server for production
 		prodServer := &http.Server{
 			Addr:    ":443", // configure the bind address to 443 (HTTPS)
-			Handler: router, // set the default handler
+			Handler: sm,     // set the default handler
 			TLSConfig: &tls.Config{
 				GetCertificate: certManager.GetCertificate,
 			},

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"golang-api-server/config"
 	"golang-api-server/model"
 	"golang-api-server/util"
@@ -15,33 +14,45 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func GetProduct(writer http.ResponseWriter, request *http.Request) {
+// Product handler for:
+// - Receiving product to be saved, updated, or deleted
+type ProductHandler struct {
+	l *log.Logger
+	v *util.Validation
+}
+
+// Return a new product handler with the given logger & validation
+func NewProductHandler(l *log.Logger, v *util.Validation) *ProductHandler {
+	return &ProductHandler{l, v}
+}
+
+func (p *ProductHandler) GetProduct(writer http.ResponseWriter, request *http.Request) {
 	DB, err_db := gorm.Open(mysql.Open(config.DSN_TEST), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err_db != nil {
-		fmt.Println("[ERROR] Failed to connect to default database", err_db.Error())
+		p.l.Println("[ERROR] Failed to connect to default database", err_db.Error())
 	}
 
 	var product model.Products
 	productResult := DB.Find(&product).
 		Where("active = ?", 2)
 	if productResult.Error != nil {
-		fmt.Println("[ERROR] Querying products", productResult.Error.Error())
+		p.l.Println("[ERROR] Querying products", productResult.Error.Error())
 	}
 
 	util.ToJSON(product, writer)
 }
 
-func CreateProduct(writer http.ResponseWriter, request *http.Request) {
+func (p *ProductHandler) CreateProduct(writer http.ResponseWriter, request *http.Request) {
 	target := "CreateProduct"
-	log.Printf("[DEBUG] %v: receive products to be saved", target)
+	p.l.Printf("[DEBUG] %v: receive products to be saved", target)
 
 	products := model.Products{}
 	b, _ := ioutil.ReadAll(request.Body)
 	err := json.Unmarshal(b, &products)
 	if err != nil {
-		fmt.Printf("[ERROR] %v: deserializing products %v", target, err)
+		p.l.Printf("[ERROR] %v: deserializing products %v", target, err)
 
 		writer.WriteHeader(http.StatusBadRequest)
 		util.ToJSON(&util.ErrorResponse{
@@ -58,7 +69,7 @@ func CreateProduct(writer http.ResponseWriter, request *http.Request) {
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err_db != nil {
-		fmt.Println("[ERROR] Failed to connect to default database", err_db.Error())
+		p.l.Println("[ERROR] Failed to connect to default database", err_db.Error())
 	}
 
 	trx := DB.CreateInBatches(products, 50)
@@ -80,15 +91,15 @@ func CreateProduct(writer http.ResponseWriter, request *http.Request) {
 	}, writer)
 }
 
-func UpdateProduct(rw http.ResponseWriter, rq *http.Request) {
+func (p *ProductHandler) UpdateProduct(rw http.ResponseWriter, rq *http.Request) {
 	target := "UpdateProduct"
-	log.Printf("[DEBUG] %v: receive products to be updated", target)
+	p.l.Printf("[DEBUG] %v: receive products to be updated", target)
 
 	products := model.Products{}
 	b, _ := ioutil.ReadAll(rq.Body)
 	err := json.Unmarshal(b, &products)
 	if err != nil {
-		fmt.Printf("[ERROR] %v: deserializing products %v", target, err)
+		p.l.Printf("[ERROR] %v: deserializing products %v", target, err)
 
 		rw.WriteHeader(http.StatusBadRequest)
 		util.ToJSON(&util.ErrorResponse{
@@ -105,13 +116,13 @@ func UpdateProduct(rw http.ResponseWriter, rq *http.Request) {
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err_db != nil {
-		fmt.Println("[ERROR] Failed to connect to default database", err_db.Error())
+		p.l.Println("[ERROR] Failed to connect to default database", err_db.Error())
 	}
 
 	txDB := DB.Begin()
 	res := txDB.Save(&products)
 	if res.Error != nil {
-		fmt.Printf("[ERROR] %v: update product %v", target, res.Error.Error())
+		p.l.Printf("[ERROR] %v: update product %v", target, res.Error.Error())
 		txDB.Rollback()
 
 		rw.WriteHeader(http.StatusInternalServerError)
@@ -127,7 +138,7 @@ func UpdateProduct(rw http.ResponseWriter, rq *http.Request) {
 
 	res = txDB.Commit()
 	if res.Error != nil {
-		fmt.Printf("[ERROR] %v: commit update product %v", target, res.Error.Error())
+		p.l.Printf("[ERROR] %v: commit update product %v", target, res.Error.Error())
 		txDB.Rollback()
 
 		rw.WriteHeader(http.StatusInternalServerError)
@@ -149,15 +160,15 @@ func UpdateProduct(rw http.ResponseWriter, rq *http.Request) {
 	}, rw)
 }
 
-func DeleteProduct(rw http.ResponseWriter, rq *http.Request) {
+func (p *ProductHandler) DeleteProduct(rw http.ResponseWriter, rq *http.Request) {
 	target := "DeleteProduct"
-	log.Printf("[DEBUG] %v: receive products to be deleted", target)
+	p.l.Printf("[DEBUG] %v: receive products to be deleted", target)
 
 	products := model.Products{}
 	b, _ := ioutil.ReadAll(rq.Body)
 	err := json.Unmarshal(b, &products)
 	if err != nil {
-		fmt.Printf("[ERROR] %v: deserializing products %v", target, err)
+		p.l.Printf("[ERROR] %v: deserializing products %v", target, err)
 
 		rw.WriteHeader(http.StatusBadRequest)
 		util.ToJSON(&util.ErrorResponse{
@@ -174,12 +185,12 @@ func DeleteProduct(rw http.ResponseWriter, rq *http.Request) {
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err_db != nil {
-		fmt.Println("[ERROR] Failed to connect to default database", err_db.Error())
+		p.l.Println("[ERROR] Failed to connect to default database", err_db.Error())
 	}
 
 	res := DB.Delete(&products)
 	if res.Error != nil {
-		fmt.Printf("[ERROR] %v: commit update product %v", target, res.Error.Error())
+		p.l.Printf("[ERROR] %v: commit update product %v", target, res.Error.Error())
 		res.Rollback()
 
 		rw.WriteHeader(http.StatusInternalServerError)
